@@ -1,5 +1,7 @@
 /*
  * Author: Davide Tiriticco
+ * Hardware required: Arduino/Genuino 101
+ * Date: March 2016
  */
  
 #include <CurieIMU.h>
@@ -7,7 +9,7 @@
 
 #define CONVERT(RAW, RANGE) (RAW * RANGE / float(__INT16_MAX__))
 
-Madgwick filter; // initialise Madgwick object
+Madgwick filter;
 int ax, ay, az;
 int gx, gy, gz;
 int a_range, g_range;
@@ -27,20 +29,23 @@ void setup() {
   CurieIMU.autoCalibrateGyroOffset();
   Serial.println(" Done");
   
+  // Calibrate the device. The board should be placed in horizontal position
   Serial.print("Starting Acceleration calibration...");
   CurieIMU.autoCalibrateAccelerometerOffset(X_AXIS, 0);
   CurieIMU.autoCalibrateAccelerometerOffset(Y_AXIS, 0);
   CurieIMU.autoCalibrateAccelerometerOffset(Z_AXIS, 1);
   Serial.println(" Done");
-
+  
+  // Read value ranges
   a_range = CurieIMU.getAccelerometerRange();
   g_range = CurieIMU.getGyroRange();
 }
 
 void loop() {
-  // read raw accel/gyro measurements from device
+  // Read raw accel/gyro measurements
   CurieIMU.readMotionSensor(ax, ay, az, gx, gy, gz); 
 
+  // Convert raw values from motion sensors
   scaled_ax = CONVERT(ax, a_range);
   scaled_ay = CONVERT(ay, a_range);
   scaled_az = CONVERT(az, a_range);
@@ -48,7 +53,7 @@ void loop() {
   scaled_gy = CONVERT(gy, g_range);
   scaled_gz = CONVERT(gz, g_range);
   
-  // use function from MagdwickAHRS.h to return quaternions
+  // Use function from MagdwickAHRS.h to return quaternions
   filter.updateIMU(scaled_gx / factor, scaled_gy / factor, scaled_gz / factor, scaled_ax, scaled_ay, scaled_az);
 
   /*
@@ -61,21 +66,19 @@ void loop() {
   Serial.println("");
   */
 
-
   // functions to find yaw roll and pitch from quaternions
   yaw = filter.getYaw();
   roll = filter.getRoll();
   pitch = filter.getPitch();
   
-  // print gyro and accel values for debugging only, comment out when running Processing
   if (Serial.available() > 0) {
     int val = Serial.read();
     if (val == 's') { // if incoming serial is "s"
-      Serial.print(yaw);    // Rotation on the Z axis
-      Serial.print(","); // print comma so values can be parsed
-      Serial.print(pitch);  // Rotation on the Y Axis
-      Serial.print(","); // print comma so values can be parsed
-      Serial.println(roll); // Rotation on the X Axis
+      Serial.print(yaw);    // Z axis rotation
+      Serial.print(",");
+      Serial.print(pitch);  // Y Axis rotation
+      Serial.print(",");
+      Serial.println(roll); // X Axis rotation
     }
   }
 }
