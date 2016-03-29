@@ -1,3 +1,9 @@
+/*
+ * Author: Davide Tiriticco
+ * Hardware required: Arduino/Genuino 101
+ * Date: March 2016
+ */
+ 
 #include <CurieBLE.h>
 
 const int ledPin = 13; // set ledPin to  LED
